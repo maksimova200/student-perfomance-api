@@ -12,3 +12,11 @@ class StudentResponse(StudentBase):
 
     class Config:
         from_attributes = True
+
+
+class StudentAnalytics(BaseModel):
+    full_name: str
+    count_twos: int
+
+    class Config:
+        from_attributes = True

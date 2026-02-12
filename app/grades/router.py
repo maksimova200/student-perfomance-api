@@ -10,7 +10,6 @@ async def upload_grades(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="Файл должен быть формата .csv")
 
     try:
-        # Читаем байты и декодируем в строку
         content_bytes = await file.read()
         content_str = content_bytes.decode("utf-8-sig")
         rows = parse_csv(content_str)
