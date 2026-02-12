@@ -5,30 +5,26 @@ from app.grades.schemas import GradeCSVRow
 async def bulk_insert_grades(rows: List[GradeCSVRow]) -> Dict[str, int]:
     async with database.pool.acquire() as conn:
         async with conn.transaction():
-            # Собираем уникальных студентов
-            students = {
-                (row.full_name, row.group_number)
-                for row in rows
-            }
+            unique_students = list({(row.full_name.strip(), row.group_number.strip()) for row in rows})
 
             await conn.executemany(
                 """
                 INSERT INTO students (full_name, group_number)
-                VALUES ($1, $2)
+                VALUES (TRIM($1), TRIM($2))
                 ON CONFLICT (full_name, group_number) DO NOTHING
                 """,
-                list(students)
+                unique_students
             )
 
-            # Маппим 
-            names = [name for name, group in students]
-            groups = [group for name, group in students]
+            names = [s[0] for s in unique_students]
+            groups = [s[1] for s in unique_students]
             
             db_students = await conn.fetch("""
-                SELECT s.id, s.full_name, s.group_number 
+                SELECT s.id, TRIM(s.full_name) as full_name, TRIM(s.group_number) as group_number 
                 FROM students s
                 JOIN unnest($1::text[], $2::text[]) AS input(name, group_num)
-                ON s.full_name = input.name AND s.group_number = input.group_num
+                ON TRIM(s.full_name) = TRIM(input.name) 
+                AND TRIM(s.group_number) = TRIM(input.group_num)
             """, names, groups)
             
             student_map = {
@@ -36,15 +32,12 @@ async def bulk_insert_grades(rows: List[GradeCSVRow]) -> Dict[str, int]:
                 for r in db_students
             }
 
-            # Готовим для вставки 
-            grades_data = [
-                (
-                    student_map[(row.full_name, row.group_number)],
-                    row.grade,
-                    row.lesson_date
-                )
-                for row in rows
-            ]
+            grades_data = []
+            for row in rows:
+                key = (row.full_name.strip(), row.group_number.strip())
+                student_id = student_map.get(key)
+                if student_id:
+                    grades_data.append((student_id, row.grade, row.lesson_date))
 
             await conn.executemany(
                 """
@@ -55,6 +48,7 @@ async def bulk_insert_grades(rows: List[GradeCSVRow]) -> Dict[str, int]:
             )
 
             return {
-                "records_loaded": len(rows),
-                "new_students_potential": len(students)
+                "in_file": len(rows),
+                "in_db": len(grades_data),
+                "map_size": len(student_map)
             }
