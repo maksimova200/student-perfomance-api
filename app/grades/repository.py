@@ -5,12 +5,12 @@ from app.grades.schemas import GradeCSVRow
 async def bulk_insert_grades(rows: List[GradeCSVRow]) -> Dict[str, int]:
     async with database.pool.acquire() as conn:
         async with conn.transaction():
-            unique_students = list({(row.full_name.strip(), row.group_number.strip()) for row in rows})
+            unique_students = list({(row.full_name, row.group_number) for row in rows})
 
             await conn.executemany(
                 """
                 INSERT INTO students (full_name, group_number)
-                VALUES (TRIM($1), TRIM($2))
+                VALUES ($1, $2)
                 ON CONFLICT (full_name, group_number) DO NOTHING
                 """,
                 unique_students
@@ -20,11 +20,11 @@ async def bulk_insert_grades(rows: List[GradeCSVRow]) -> Dict[str, int]:
             groups = [s[1] for s in unique_students]
             
             db_students = await conn.fetch("""
-                SELECT s.id, TRIM(s.full_name) as full_name, TRIM(s.group_number) as group_number 
+                SELECT s.id, s.full_name, s.group_number 
                 FROM students s
                 JOIN unnest($1::text[], $2::text[]) AS input(name, group_num)
-                ON TRIM(s.full_name) = TRIM(input.name) 
-                AND TRIM(s.group_number) = TRIM(input.group_num)
+                ON s.full_name = input.name 
+                AND s.group_number = input.group_num
             """, names, groups)
             
             student_map = {
@@ -34,7 +34,7 @@ async def bulk_insert_grades(rows: List[GradeCSVRow]) -> Dict[str, int]:
 
             grades_data = []
             for row in rows:
-                key = (row.full_name.strip(), row.group_number.strip())
+                key = (row.full_name, row.group_number)
                 student_id = student_map.get(key)
                 if student_id:
                     grades_data.append((student_id, row.grade, row.lesson_date))
