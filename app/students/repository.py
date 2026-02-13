@@ -1,18 +1,17 @@
-from app.database import database
+from asyncpg import Connection
+from typing import List, Dict
 
-async def get_all_students():
-    async with database.pool.acquire() as connection:
-        rows = await connection.fetch("SELECT id, full_name, group_number FROM students")
-        return [dict(row) for row in rows]
+async def get_all_students(conn: Connection) -> List[Dict]:
+    rows = await conn.fetch("SELECT id, full_name, group_number FROM students")
+    return [dict(row) for row in rows]
 
-async def create_student(full_name: str, group_number: str):
-    async with database.pool.acquire() as connection:
-        return await connection.fetchrow(
-            "INSERT INTO students (full_name, group_number) VALUES ($1, $2) RETURNING id, full_name, group_number",
-            full_name, group_number
-        )
+async def create_student(conn: Connection, full_name: str, group_number: str) -> Dict:
+    return await conn.fetchrow(
+        "INSERT INTO students (full_name, group_number) VALUES ($1, $2) RETURNING id, full_name, group_number",
+        full_name, group_number
+    )
     
-async def get_students_by_twos_limit(operator: str, count: int):
+async def get_students_by_twos_limit(conn: Connection, operator: str, count: int) -> List[Dict]:
     query = f"""
         SELECT s.full_name, COUNT(g.id)::int as count_twos
         FROM students s
@@ -22,6 +21,5 @@ async def get_students_by_twos_limit(operator: str, count: int):
         HAVING COUNT(g.id) {operator} $1
         ORDER BY count_twos DESC
     """
-    async with database.pool.acquire() as connection:
-        rows = await connection.fetch(query, count)
-        return [dict(row) for row in rows]
+    rows = await conn.fetch(query, count)
+    return [dict(row) for row in rows]

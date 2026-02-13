@@ -1,7 +1,8 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
 import logging
-from app.database import database
+import os
+import asyncpg
 from app.students.router import router as students_router
 from app.grades.router import router as grades_router
 
@@ -14,11 +15,11 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Запуск приложения...")
-    await database.connect()
+    app.state.pool = await asyncpg.create_pool(dsn=os.getenv("DATABASE_URL"))
     logger.info("Приложение успешно запущено")
     yield
     logger.info("Остановка приложения...")
-    await database.disconnect()
+    await app.state.pool.close()
     logger.info("Приложение остановлено")
 
 app = FastAPI(title="Student Performance API", lifespan=lifespan)

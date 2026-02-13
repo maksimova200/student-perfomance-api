@@ -1,24 +1,8 @@
-import os
+from fastapi import Request
 import asyncpg
-import logging
-from typing import Optional
+from typing import AsyncGenerator
 
-DATABASE_URL = os.getenv("DATABASE_URL")
-
-logger = logging.getLogger(__name__)
-
-class Database:
-    def __init__(self):
-        self.pool: Optional[asyncpg.Pool] = None
-
-    async def connect(self):
-        if not self.pool:
-            self.pool = await asyncpg.create_pool(dsn=DATABASE_URL)
-            logger.info("Подключение к пулу БД установлено")
-
-    async def disconnect(self):
-        if self.pool:
-            await self.pool.close()
-            logger.info("Пул БД закрыт")
-
-database = Database()
+async def get_connection(request: Request) -> AsyncGenerator[asyncpg.Connection, None]:
+    """Зависимость для получения соединения из пула в state"""
+    async with request.app.state.pool.acquire() as conn:
+        yield conn

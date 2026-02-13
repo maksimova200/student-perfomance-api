@@ -4,6 +4,8 @@ from typing import List
 from app.grades.schemas import GradeCSVRow
 
 def parse_csv(content: str) -> List[GradeCSVRow]:
+    if not content:
+        raise ValueError("Файл пуст")
     f = StringIO(content.strip())
     
     reader = csv.DictReader(f, delimiter=';')
