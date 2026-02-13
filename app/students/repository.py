@@ -11,14 +11,27 @@ async def create_student(conn: Connection, full_name: str, group_number: str) ->
         full_name, group_number
     )
     
-async def get_students_by_twos_limit(conn: Connection, operator: str, count: int) -> List[Dict]:
+async def get_students_by_more_twos(conn: Connection, count: int) -> List[Dict]:
     query = f"""
         SELECT s.full_name, COUNT(g.id)::int as count_twos
         FROM students s
         JOIN grades g ON s.id = g.student_id
         WHERE g.grade = 2
         GROUP BY s.id, s.full_name
-        HAVING COUNT(g.id) {operator} $1
+        HAVING COUNT(g.id) > $1
+        ORDER BY count_twos DESC
+    """
+    rows = await conn.fetch(query, count)
+    return [dict(row) for row in rows]
+
+async def get_students_by_less_twos(conn: Connection, count: int) -> List[Dict]:
+    query = f"""
+        SELECT s.full_name, COUNT(g.id)::int as count_twos
+        FROM students s
+        JOIN grades g ON s.id = g.student_id
+        WHERE g.grade = 2
+        GROUP BY s.id, s.full_name
+        HAVING COUNT(g.id) < $1
         ORDER BY count_twos DESC
     """
     rows = await conn.fetch(query, count)

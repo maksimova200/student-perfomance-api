@@ -11,5 +11,5 @@ async def test_bulk_insert_and_unnest_logic(db_conn):
     ]
     result = await bulk_insert_grades(rows, db_conn)
     
-    assert result["in_db"] == 2
-    assert result["map_size"] == 1 # Должен создаться 1 студент на 2 оценки
+    assert result["records_loaded"] == 2
+    assert result["students"] == 1 # Должен создаться 1 студент на 2 оценки

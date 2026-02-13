@@ -7,9 +7,7 @@ async def test_upload_grades_success(client, csv_factory):
     
     response = await client.post("/upload-grades", files=files)
     assert response.status_code == 200
-    assert response.json()["details"]["in_db"] == 1
-
-# остальные тесты без изменений
+    assert response.json()["details"]["records_loaded"] == 1
 
 @pytest.mark.asyncio
 async def test_upload_invalid_extension(client):
@@ -19,13 +17,11 @@ async def test_upload_invalid_extension(client):
 
 @pytest.mark.asyncio
 async def test_reupload_idempotency(client, csv_factory):
-    # Повторная загрузка тех же данных
     csv_data = csv_factory(["01.01.2025;101;Смирнов;5"])
     files = {'file': ('test.csv', csv_data, 'text/csv')}
     
     await client.post("/upload-grades", files=files)
     response = await client.post("/upload-grades", files=files)
     
-    # В твоей схеме БД нет UNIQUE на оценки, поэтому они просто добавятся еще раз
     assert response.status_code == 200
-    assert response.json()["details"]["in_db"] == 1
+    assert response.json()["details"]["records_loaded"] == 1

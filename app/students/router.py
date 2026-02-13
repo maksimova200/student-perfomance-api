@@ -24,9 +24,9 @@ async def add_student(
 @router.get("/more-than-3-twos", response_model=List[schemas.StudentAnalytics])
 async def get_more_than_3_twos(conn: Connection = Depends(get_connection)):
     """Список студентов, у которых более 3 двоек"""
-    return await repository.get_students_by_twos_limit(conn, ">", 3)
+    return await repository.get_students_by_more_twos(conn, 3)
 
 @router.get("/less-than-5-twos", response_model=List[schemas.StudentAnalytics])
-async def get_less_than_5_twos(conn: Connection = Depends(get_connection)):
+async def get_students_by_less_twos(conn: Connection = Depends(get_connection)):
     """Список студентов, у которых менее 5 двоек"""
-    return await repository.get_students_by_twos_limit(conn, "<", 5)
+    return await repository.get_students_by_less_twos(conn, 5)
