@@ -8,6 +8,7 @@ router = APIRouter(prefix="/students", tags=["Students"])
 
 @router.get("/", response_model=List[schemas.StudentResponse])
 async def list_students(conn: Connection = Depends(get_connection)):
+    """Возвращает список всех студентов."""
     return await repository.get_all_students(conn)
 
 @router.post("/", response_model=schemas.StudentResponse)
@@ -15,6 +16,7 @@ async def add_student(
     student: schemas.StudentCreate,
     conn: Connection = Depends(get_connection)
 ):
+    """Создает нового студента."""
     try:
         new_row = await repository.create_student(conn, student.full_name, student.group_number)
         return dict(new_row)

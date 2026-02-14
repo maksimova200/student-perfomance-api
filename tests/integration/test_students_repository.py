@@ -3,6 +3,7 @@ from app.students import repository
 
 @pytest.mark.asyncio
 async def test_student_creation(db_conn, clear_db):
+    """Тест создания студента"""
     student = await repository.create_student(db_conn, "Антонов А.А.", "200")
     assert student["full_name"] == "Антонов А.А."
     
@@ -11,6 +12,7 @@ async def test_student_creation(db_conn, clear_db):
 
 @pytest.mark.asyncio
 async def test_student_uniqueness(db_conn):
+    """Тест уникальности студента"""
     await repository.create_student(db_conn, "Иванов", "101")
     with pytest.raises(Exception): # Нарушение UNIQUE constraint
         await repository.create_student(db_conn, "Иванов", "101")

@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    """Создает пул соединений с БД при старте и закрывает его при остановке."""
     logger.info("Запуск приложения...")
     app.state.pool = await asyncpg.create_pool(dsn=os.getenv("DATABASE_URL"))
     logger.info("Приложение успешно запущено")
@@ -29,5 +30,6 @@ app.include_router(grades_router)
 
 @app.get("/health")
 async def health():
+    """Эндпоинт для проверки работоспособности сервиса."""
     logger.debug("Health check запрос")
     return {"status": "ok"}

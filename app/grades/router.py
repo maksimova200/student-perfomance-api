@@ -11,6 +11,7 @@ async def upload_grades(
     file: UploadFile = File(...),
     conn: Connection = Depends(get_connection)
 ):
+    """Эндпоинт для загрузки файла с оценками в формате CSV."""
     if not file.filename.endswith(".csv"):
         raise HTTPException(status_code=400, detail="Файл должен быть формата .csv")
 

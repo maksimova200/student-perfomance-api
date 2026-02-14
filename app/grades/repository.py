@@ -3,6 +3,7 @@ from asyncpg import Connection
 from app.grades.schemas import GradeCSVRow
 
 def build_grades_data(rows: List[GradeCSVRow], student_map: Dict[tuple, int]) -> List[tuple]:
+    """Строит список кортежей с данными для вставки оценок в базу данных."""
     grades_data = []
 
     for row in rows:
@@ -17,6 +18,7 @@ def build_grades_data(rows: List[GradeCSVRow], student_map: Dict[tuple, int]) ->
     return grades_data
 
 async def upsert_students(rows: List[GradeCSVRow], conn: Connection) -> Dict[tuple, int]:
+    """ Вставляет уникальных студентов в базу данных и возвращает маппинг их ID."""
     unique_students = list({(r.full_name, r.group_number) for r in rows})
 
     await conn.executemany(
@@ -45,7 +47,7 @@ async def upsert_students(rows: List[GradeCSVRow], conn: Connection) -> Dict[tup
     }
 
 async def bulk_insert_grades(rows: List[GradeCSVRow], conn: Connection) -> Dict[str, int]:
-
+    """Выполняет массовую вставку оценок в базу данных"""
     async with conn.transaction():
 
         student_map = await upsert_students(rows, conn)

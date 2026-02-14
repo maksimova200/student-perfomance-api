@@ -4,6 +4,7 @@ from typing import List
 from app.grades.schemas import GradeCSVRow
 
 def parse_csv(content: str) -> List[GradeCSVRow]:
+    """Парсит CSV и возвращает список валидированных записей."""
     if not content:
         raise ValueError("Файл пуст")
     f = StringIO(content.strip())
