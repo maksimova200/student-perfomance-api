@@ -1,14 +1,11 @@
-build:
-	docker compose up --build
-
 up:
 	docker compose up -d
 
 down:
 	docker compose down
 
-clean: down
-	sudo rm -rf ./.pgdata
+clean:
+	docker compose down -v
 
 logs:
 	docker logs service-postgres
