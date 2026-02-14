@@ -1,7 +1,8 @@
 CREATE TABLE IF NOT EXISTS students (
     id SERIAL PRIMARY KEY,
     full_name VARCHAR(255) NOT NULL,
-    group_number VARCHAR(10) NOT NULL
+    group_number VARCHAR(10) NOT NULL,
+    CONSTRAINT unique_student_group UNIQUE (full_name, group_number)
 );
 
 CREATE TABLE IF NOT EXISTS grades (

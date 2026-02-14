@@ -1,5 +1,8 @@
+build:
+	docker compose up --build
+
 up:
-	docker compose up --d
+	docker compose up -d
 
 down:
 	docker compose down
@@ -13,4 +16,8 @@ logs:
 status:
 	docker ps
 
-.PHONY: up down clean logs status
+tests:
+	docker compose run --rm --build app python -m pytest tests/ -v
+
+
+.PHONY: up down clean logs status tests start
